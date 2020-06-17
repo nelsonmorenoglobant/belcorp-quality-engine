@@ -25,41 +25,47 @@ object Profiler {
     val interfaces = ingestAttributes("Interfaces").as[Seq[String]]
     val appLogger = Logger.getLogger("datalake")
 
-    appLogger.info("Initiation Landing Process")
+    appLogger.info("Initiation profiling Process")
+
     val dataSource = new DataSource(spark)
     val s3InputPath = config.getConfig("pathS3").getString("inputPath")
     val unzippedFilesPath = s"${s3InputPath}${params.system()}/${params.country()}/unzipped/${params.id_carga()}/${params.uuidFile()}"
     val appID = spark.sparkContext.applicationId
-    val logger = new EsLogger(params, config)
-    logger.success("LANDING_LOADING",appID).done()
 
+    val logger = new EsLogger(params, config)
+    logger.success("PROFILING_DATA",appID).done()
+
+    var se : String  = ""
     try {
       val fileSystem = FileSystem.get(URI.create(unzippedFilesPath), new Configuration())
       val unzippedFiles = fileSystem.listStatus(new Path(unzippedFilesPath)).map(_.getPath.toString)
       val filesToProcess = unzippedFiles.withFilter(uz => interfaces.contains(uz.getInterface)).map(a => (a.getInterface, a))
+
+      logger.success(s"profiling ${filesToProcess.length} files",appID).done()
+
       filesToProcess.foreach {
         case (intf, infPath) => {
-          val intefasDataframe = dataSource.getDataFrame(intf, infPath, ingestAttributes, params, config)
-          appLogger.info("PERFORMING DATA QUALITY ANALYSIS")
+
+          val interfasDataframe = dataSource.getDataFrame(intf, infPath, params, config)
+
           val analysisProfiler =  DataAnalysis
-          analysisProfiler.run(spark, intefasDataframe)
+          analysisProfiler.run(spark, interfasDataframe)
 
           val dataVerification =  DataVerification
-          dataVerification.run(spark, intefasDataframe, config.getString("qualityEngine.url"))
 
-          logger.success("DATA QUALITY ANALYSIS DONE", intf, appID).done()
+          dataVerification.run(spark, interfasDataframe, config.getString("qualityEngine.url"))
         }
       }
+      logger.success("DATA QUALITY VERIFICATION DONE", appID).done()
+
       EnvUtils.httpPost(config, "/work", payloadRow)
-      logger.success("LANDING_LOADED",appID).done()
     } catch {
       case e: Exception =>
-        appLogger.error("Error, sending log to API log")
+        appLogger.error(s"Error, sending log to API log ---- ${e.getMessage}")
         logEvent.errors(e, config, spark)
         logger.failure("LANDING_FAILED", e,appID).done()
     } finally {
       spark.close()
     }
-
   }
 }

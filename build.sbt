@@ -1,6 +1,6 @@
 name := "belcorp-quality-engine"
 
-version := "0.1"
+version := "0.2"
 
 scalaVersion := "2.11.12"
 
@@ -28,3 +28,4 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.0",
   "com.fasterxml.jackson.core" % "jackson-core" % "2.10.0"
 )
+

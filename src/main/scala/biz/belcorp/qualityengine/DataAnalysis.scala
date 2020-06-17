@@ -8,6 +8,15 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 private[qualityengine] object DataAnalysis  {
 
+
+  /**
+   * Perform the data quality profiling
+   *
+   * @author Nelson Moreno
+   * @param session the spark session
+   * @param interfaceDataFrame the spark dataframe containing the inteface data.
+   * @return
+   */
   def run(session: SparkSession, interfaceDataFrame: DataFrame): DataFrame = {
     /* Make deequ profile this data. It will execute the three passes over the data and avoid
        any shuffles. */
