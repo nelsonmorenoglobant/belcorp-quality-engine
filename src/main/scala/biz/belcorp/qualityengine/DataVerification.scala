@@ -2,9 +2,8 @@ package biz.belcorp.qualityengine
 
 import com.amazon.deequ.VerificationResult.checkResultsAsDataFrame
 import com.amazon.deequ.checks.{Check, CheckLevel}
-import com.amazon.deequ.constraints.{ConstrainableDataTypes, Constraint}
+import com.amazon.deequ.constraints.ConstrainableDataTypes
 import com.amazon.deequ.{VerificationResult, VerificationSuite}
-import org.apache.spark.sql.types.{StructField, StructType, _}
 
 import scala.collection.mutable.ListBuffer
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -19,59 +18,11 @@ private[qualityengine] object DataVerification {
    * @author Nelson Moreno
    * @param session the spark session
    * @param interfaceDataFrame the spark dataframe containing the inteface data.
-   * @param rulesDataFile A csv file constraints of the interface
+   * @param rulesDataFrame the spark dataframe containing constraints of the interface
    * @return
    */
 
-  def run(session: SparkSession, interfaceDataFrame: DataFrame, rulesDataFile:  String) = {
-
-    // The belcorp data quality rules on which we will compute metrics
-    val fieldSchemaType = StructType(
-      Array(
-        StructField("source", StringType, true),
-        StructField("field", StringType, true),
-        StructField("isComplete", StringType, true),
-        StructField("hasCompleteness", StringType, true),
-        StructField("isUnique", StringType, true),
-        StructField("isPrimaryKey", StringType, true),
-        StructField("hasUniqueness", StringType, true),
-        StructField("hasDistinctness", StringType, true),
-        StructField("hasUniqueValueRatio", StringType, true),
-        StructField("hasNumberOfDistinctValues", StringType, true),
-        StructField("hasHistogramValues", StringType, true),
-        StructField("hasEntropy", StringType, true),
-        StructField("hasApproxQuantile", StringType, true),
-        StructField("hasMinLength", StringType, true),
-        StructField("hasMaxLength", StringType, true),
-        StructField("hasMin", LongType, true),
-        StructField("hasMax", LongType, true),
-        StructField("hasMean", LongType, true),
-        StructField("hasSum", LongType, true),
-        StructField("hasStandardDeviation", LongType, true),
-        StructField("hasApproxCountDistinct", StringType, true),
-        StructField("hasCorrelation", StringType, true),
-        StructField("satisfies", StringType, true),
-        StructField("hasPattern", StringType, true),
-        StructField("containsCreditCardNumber", StringType, true),
-        StructField("containsEmail", StringType, true),
-        StructField("containsURL", StringType, true),
-        StructField("containsSocialSecurityNumber", StringType, true),
-        StructField("hasDataType", StringType, true),
-        StructField("isNonNegative", LongType, true),
-        StructField("isPositive", LongType, true),
-        StructField("isLessThan", LongType, true),
-        StructField("isLessThanOrEqualTo", LongType, true),
-        StructField("isGreaterThanOrEqualTo", LongType, true),
-        StructField("isContainedIn", StringType, true)
-      )
-    )
-
-    val rulesSchema = StructType(fieldSchemaType)
-    val rulesDataFrame = session.read.format("csv")
-      .option("delimiter",";")
-      .option("header", "true")
-      .schema(rulesSchema)
-      .load(rulesDataFile)
+  def run(session: SparkSession, interfaceDataFrame: DataFrame, rulesDataFrame:  DataFrame): DataFrame = {
 
     val verificationResult: VerificationResult = {
     val _checks = new ListBuffer[Check]()
@@ -81,7 +32,7 @@ private[qualityengine] object DataVerification {
       val fieldName = row.getString(1)
        row.toSeq.toArray.zipWithIndex.foreach{ case(fieldValue,index) =>
          if(null!=fieldValue){
-            val rule = index match {
+            index match {
               case 2  => if(fieldValue.equals("s")) _checks+= isComplete(fieldName, index)
               case 3  => _checks+=  hasCompleteness(fieldName, fieldValue.toString.toDouble, index)
               case 4  => if(fieldValue.equals("s")) _checks+=  isUnique(fieldName, index)

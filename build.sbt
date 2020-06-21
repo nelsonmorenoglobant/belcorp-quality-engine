@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % "2.4.0" % "provided",
   "com.amazon.deequ" % "deequ" % "1.0.2",
   "com.typesafe.play" %% "play-json" % "2.7.4",
-  "biz.belcorp" % "dl" % "1.0" from "file:///Users/nelsonmanuelmorenorestrepo/IdeaProjects/BelcorpUtils/target/scala-2.11/belcorputils_2.11-0.1.jar ",
+  "biz.belcorp" % "dl" % "1.0" from "file:///Users/nelsonmanuelmorenorestrepo/IdeaProjects/BelcorpUtils/target/scala-2.11/belcorputils_2.11-0.1.jar",
   "com.amazonaws" % "aws-java-sdk-elasticsearch" % "1.11.307",
   "com.amazonaws" % "aws-java-sdk-s3" % "1.11.307",
   "com.amazonaws" % "aws-java-sdk-glue" % "1.11.307",

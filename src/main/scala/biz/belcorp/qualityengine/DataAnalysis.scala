@@ -1,6 +1,6 @@
 package biz.belcorp.qualityengine
 
-import com.amazon.deequ.profiles.{ColumnProfilerRunner, NumericColumnProfile}
+import com.amazon.deequ.profiles.ColumnProfilerRunner
 import com.amazon.deequ.analyzers.runners.{AnalysisRunner, AnalyzerContext}
 import com.amazon.deequ.analyzers.runners.AnalyzerContext.successMetricsAsDataFrame
 import com.amazon.deequ.analyzers.{ApproxCountDistinct, ApproxQuantile, ApproxQuantiles, Completeness, DataType, Distinctness, Entropy, Maximum, Mean, Minimum, Size, Sum, UniqueValueRatio, Uniqueness}
@@ -30,9 +30,8 @@ private[qualityengine] object DataAnalysis  {
       val analysisRunner = AnalysisRunner
         // data to run the analysis on
         .onData(interfaceDataFrame)
-      result.profiles.foreach { case (productName, profile) =>
-        val columnName = profile.column
-
+      result.profiles.foreach { case (name, profile) =>
+        val columnName = name
         analysisRunner.addAnalyzer(ApproxCountDistinct(columnName))
         analysisRunner.addAnalyzer(ApproxQuantile(columnName, quantile = 0.5))
         analysisRunner.addAnalyzer(ApproxQuantiles(columnName, quantiles = Seq(0.1, 0.5, 0.9)))
